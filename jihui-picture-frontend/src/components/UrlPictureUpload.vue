@@ -25,8 +25,9 @@ interface Props {
   spaceId?: number
   onSuccess?: (newPicture: API.PictureVO) => void
 }
-
 const props = defineProps<Props>()
+
+
 const fileUrl = ref<string>()
 const loading = ref<boolean>(false)
 

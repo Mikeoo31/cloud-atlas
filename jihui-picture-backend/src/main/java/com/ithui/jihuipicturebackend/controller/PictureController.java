@@ -8,7 +8,9 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.ithui.jihuipicturebackend.annotation.AuthCheck;
 import com.ithui.jihuipicturebackend.api.aliyunai.AliYunAiApi;
+import com.ithui.jihuipicturebackend.api.aliyunai.model.AiGeneratePaintingTaskResponse;
 import com.ithui.jihuipicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.ithui.jihuipicturebackend.api.aliyunai.model.GetAiGeneratePaintingTaskResponse;
 import com.ithui.jihuipicturebackend.api.aliyunai.model.GetOutPaintingTaskResponse;
 import com.ithui.jihuipicturebackend.api.imagesearch.ImageSearchApiFacade;
 import com.ithui.jihuipicturebackend.api.imagesearch.model.ImageSearchResult;
@@ -406,6 +408,35 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         CreateOutPaintingTaskResponse response = pictureService.createPictureOutPaintingTask(createPictureOutPaintingTaskRequest, loginUser);
         return ResultUtils.success(response);
+    }
+
+    /**
+     * 创建 ai 文生图任务
+     *
+     * @param aiGeneratePictureRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/ai_generate/create_task")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.PICTURE_EDIT)
+    public BaseResponse<AiGeneratePaintingTaskResponse> aiGeneratePaintingTask(@RequestBody AiGeneratePictureRequest aiGeneratePictureRequest,
+                                                                               HttpServletRequest request){
+        if (aiGeneratePictureRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        AiGeneratePaintingTaskResponse response = pictureService.aiGeneratePaintingTask(aiGeneratePictureRequest, loginUser);
+        return ResultUtils.success(response);
+    }
+
+    /**
+     * 查询 AI 文生图任务
+     */
+    @GetMapping("/ai_generate/get_task")
+    public BaseResponse<GetAiGeneratePaintingTaskResponse> getAiGeneratePictureTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAMS_ERROR);
+        GetAiGeneratePaintingTaskResponse task = aliYunAiApi.getAiGeneratePaintingTask(taskId);
+        return ResultUtils.success(task);
     }
 
     /**

@@ -16,6 +16,10 @@
         <!-- URL 图片上传组件 -->
         <UrlPictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
       </a-tab-pane>
+      <a-tab-pane key="aipicture" tab="文生图" force-render>
+        <!-- ai图片上传组件 -->
+        <AIPictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
+      </a-tab-pane>
     </a-tabs>
     <!-- 图片编辑 -->
     <div v-if="picture" class="edit-bar">
@@ -94,10 +98,12 @@ import {
 } from '@/api/pictureController.ts'
 import { useRoute, useRouter } from 'vue-router'
 import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
+import AIPictureUpload from '@/components/AiPictureUpload.vue'
 import ImageCropper from '@/components/ImageCropper.vue'
 import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import ImageOutPainting from '@/components/ImageOutPainting.vue'
 import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
+
 
 const router = useRouter()
 const route = useRoute()

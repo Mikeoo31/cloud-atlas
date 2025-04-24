@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ithui.jihuipicturebackend.api.aliyunai.AliYunAiApi;
+import com.ithui.jihuipicturebackend.api.aliyunai.model.AiGeneratePaintingTaskRequest;
+import com.ithui.jihuipicturebackend.api.aliyunai.model.AiGeneratePaintingTaskResponse;
 import com.ithui.jihuipicturebackend.api.aliyunai.model.CreateOutPaintingTaskRequest;
 import com.ithui.jihuipicturebackend.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.ithui.jihuipicturebackend.exception.BusinessException;
@@ -478,12 +480,14 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             boolean result = this.removeById(pictureId);
             ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
             // 更新空间的使用额度，释放额度
-            boolean update = spaceService.lambdaUpdate()
-                    .eq(Space::getId, oldPicture.getSpaceId())
-                    .setSql("totalSize = totalSize - " + oldPicture.getPicSize())
-                    .setSql("totalCount = totalCount - 1")
-                    .update();
-            ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            if (oldPicture.getSpaceId() != null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, oldPicture.getSpaceId())
+                        .setSql("totalSize = totalSize - " + oldPicture.getPicSize())
+                        .setSql("totalCount = totalCount - 1")
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            }
             return true;
         });
         // 异步清理文件
@@ -616,6 +620,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "批量编辑失败");
     }
 
+    /**
+     * 创建扩图任务
+     *
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser
+     * @return
+     */
     @Override
     public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
         // 获取图片信息
@@ -632,6 +643,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         createOutPaintingTaskRequest.setParameters(createPictureOutPaintingTaskRequest.getParameters());
         // 创建任务
         return aliYunAiApi.createOutPaintingTask(createOutPaintingTaskRequest);
+    }
+
+    /**
+     * 创建 ai 文生图任务
+     *
+     * @param aiGeneratePictureRequest
+     * @param loginUser
+     * @return
+     */
+    public AiGeneratePaintingTaskResponse aiGeneratePaintingTask(AiGeneratePictureRequest aiGeneratePictureRequest, User loginUser){
+        String prompt = aiGeneratePictureRequest.getPrompt();
+        if (StrUtil.isBlank(prompt)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请输入文字描述");
+        }
+        // 创建任务
+        AiGeneratePaintingTaskRequest aiGeneratePaintingTaskRequest = new AiGeneratePaintingTaskRequest();
+        AiGeneratePaintingTaskRequest.Input input = new AiGeneratePaintingTaskRequest.Input();
+        input.setPrompt(prompt);
+        aiGeneratePaintingTaskRequest.setInput(input);
+        return aliYunAiApi.aiGeneratePaintingTask(aiGeneratePaintingTaskRequest);
     }
 
     /**
